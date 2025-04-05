@@ -32,6 +32,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.ResourceBundle;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 /**
  * The main class for JCommander. It's responsible for parsing the object that contains
@@ -583,6 +584,7 @@ public class JCommander {
      */
     private List<String> readFile(String fileName) {
         List<String> result = Lists.newArrayList();
+        var p = Pattern.compile("(\"[^\"]+\"|\\S+)");
 
         try (BufferedReader bufRead = Files.newBufferedReader(Paths.get(fileName), options.atFileCharset)) {
             String line;
@@ -590,7 +592,10 @@ public class JCommander {
             while ((line = bufRead.readLine()) != null) {
                 // Allow empty lines and # comments in these at files
                 if (!line.isEmpty() && !line.trim().startsWith("#")) {
-                    result.addAll(Arrays.asList(line.split("\\s")));
+                    var m = p.matcher(line);
+                    while(m.find()){
+                        result.add(m.group(1).replaceAll("^\"|\"$", ""));
+                    }
                 }
             }
         } catch (IOException e) {
